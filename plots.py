@@ -111,7 +111,7 @@ def corrmap(data):
 def barplot(data):
     def age_band(num):
         for i in range(1, 100):
-            if num < 10*i :  return f'{(i-1) * 10} ~ {i*10}'
+            if num < 10*i : return f'{(i-1) * 10} ~ {i*10}'
 
     data['age_band'] = data['age'].apply(age_band)
     titanic_age = data[['age_band', 'survived']].groupby('age_band')['survived'].value_counts().sort_index().unstack().fillna(0)

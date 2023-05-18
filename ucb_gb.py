@@ -15,14 +15,17 @@ def ucb_select_hyperparameters(hyperparameter_counts, hyperparameter_rewards, le
     
     return selected_learning_rate, selected_n_estimators
 
-def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperparameter_counts, hyperparameter_rewards):
-    num_iterations = 100
-
-    for _ in range(num_iterations):
+def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperparameter_counts, hyperparameter_rewards, num_hyperparameters):
+    
+    for _ in range(num_hyperparameters):
         selected_learning_rate_ucb, selected_n_estimators_ucb = ucb_select_hyperparameters(
             hyperparameter_counts, hyperparameter_rewards, learning_rate_space, n_estimators_space
         )
      
+        selected_learning_rate_random = random.choice(learning_rate_space)
+        selected_n_estimators_random = random.choice(n_estimators_space)
+        
+        #model with UCB
         model_ucb = GradientBoostingClassifier(learning_rate=selected_learning_rate_ucb, n_estimators=selected_n_estimators_ucb)
         model_ucb.fit(X, y)
         y_pred_ucb = model_ucb.predict(X)
@@ -33,18 +36,16 @@ def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperpar
         hyperparameter_counts[hyperparameter_index_ucb] += 1
         hyperparameter_rewards[hyperparameter_index_ucb] += accuracy_ucb
 
-    selected_learning_rate_random = random.choice(learning_rate_space)
-    selected_n_estimators_random = random.choice(n_estimators_space)
+        #model with random parameters
+        model_random = GradientBoostingClassifier(learning_rate=selected_learning_rate_random, n_estimators=selected_n_estimators_random)
+        model_random.fit(X, y)
+        y_pred_random = model_random.predict(X)
+        accuracy_random = accuracy_score(y, y_pred_random)
+        validation_error_random = 1 - accuracy_random
 
-    model_random = GradientBoostingClassifier(learning_rate=selected_learning_rate_random, n_estimators=selected_n_estimators_random)
-    model_random.fit(X, y)
-    y_pred_random = model_random.predict(X)
-    accuracy_random = accuracy_score(y, y_pred_random)
-    validation_error_random = 1 - accuracy_random
-
-    hyperparameter_index_random = learning_rate_space.index(selected_learning_rate_random) * len(n_estimators_space) + n_estimators_space.index(selected_n_estimators_random)
-    hyperparameter_counts[hyperparameter_index_random] += 1
-    hyperparameter_rewards[hyperparameter_index_random] += accuracy_random
+        hyperparameter_index_random = learning_rate_space.index(selected_learning_rate_random) * len(n_estimators_space) + n_estimators_space.index(selected_n_estimators_random)
+        hyperparameter_counts[hyperparameter_index_random] += 1
+        hyperparameter_rewards[hyperparameter_index_random] += accuracy_random
 
     print(f"Best validation error (UCB): {validation_error_ucb} with learning rate {selected_learning_rate_ucb} and number of estimators {selected_n_estimators_ucb}")
     print(f"Best validation error (Random strategy): {validation_error_random} with learning rate {selected_learning_rate_random} and number of estimators {selected_n_estimators_random}")
