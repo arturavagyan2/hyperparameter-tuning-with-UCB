@@ -26,10 +26,15 @@ def ucb_select_hyperparameters(hyperparameter_counts, hyperparameter_rewards, le
                                                                                                  learning_rate_space, n_estimators_space,
                                                                                                  max_depth_space, hidden_layer_sizes_space)
     """
+    #UCB
     total_counts = np.sum(hyperparameter_counts)
     exploration_factor = 2.0
-    ucb_values = hyperparameter_rewards / (hyperparameter_counts + 1e-6) + exploration_factor * np.sqrt(np.log(total_counts + 1) / (hyperparameter_counts + 1e-6))
+    epsilon = 1e-6 #to avoid zero division
+
+    ucb_values = hyperparameter_rewards / (hyperparameter_counts + epsilon) + exploration_factor * np.sqrt(np.log(total_counts + 1) / (hyperparameter_counts + epsilon))
     selected_index = np.argmax(ucb_values)
+
+    #variables to return
     num_combinations = len(n_estimators_space) * len(max_depth_space)
     selected_learning_rate = learning_rate_space[selected_index // (num_combinations)]
     selected_n_estimators = n_estimators_space[(selected_index // len(max_depth_space)) % len(n_estimators_space)]
