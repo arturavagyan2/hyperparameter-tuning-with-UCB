@@ -16,7 +16,6 @@ def ucb_select_hyperparameters(hyperparameter_counts, hyperparameter_rewards, le
     return selected_learning_rate, selected_n_estimators
 
 def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperparameter_counts, hyperparameter_rewards, num_hyperparameters):
-    
     for _ in range(num_hyperparameters):
         selected_learning_rate_ucb, selected_n_estimators_ucb = ucb_select_hyperparameters(
             hyperparameter_counts, hyperparameter_rewards, learning_rate_space, n_estimators_space
@@ -50,17 +49,31 @@ def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperpar
     print(f"Best validation error (UCB): {validation_error_ucb} with learning rate {selected_learning_rate_ucb} and number of estimators {selected_n_estimators_ucb}")
     print(f"Best validation error (Random strategy): {validation_error_random} with learning rate {selected_learning_rate_random} and number of estimators {selected_n_estimators_random}")
 
-def best_hyperparams(X, y, hyperparameter_rewards, learning_rate_space, n_estimators_space):
+def UCB_random_models(X, y, hyperparameter_rewards, learning_rate_space, n_estimators_space):
     best_hyperparameter_index = np.argmax(hyperparameter_rewards)
     best_learning_rate = learning_rate_space[best_hyperparameter_index // len(n_estimators_space)]
     best_n_estimators = n_estimators_space[best_hyperparameter_index % len(n_estimators_space)]
 
+    learning_rate_random = random.choice(learning_rate_space)
+    n_estimators_random = random.choice(n_estimators_space)
+
+    #model with UCB
     best_model = GradientBoostingClassifier(learning_rate=best_learning_rate, n_estimators=best_n_estimators)
     best_model.fit(X, y)
     y_pred_best = best_model.predict(X)
     accuracy_best = accuracy_score(y, y_pred_best)
 
+    #model with random parameters
+    model_random = GradientBoostingClassifier(learning_rate=learning_rate_random, n_estimators=n_estimators_random)
+    model_random.fit(X, y)
+    y_pred_random = model_random.predict(X)
+    accuracy_random = accuracy_score(y, y_pred_random)
+
     print("Best hyperparameters:")
-    print("Learning Rate:", best_learning_rate)
-    print("Number of Estimators:", best_n_estimators)
-    print("Accuracy with best hyperparameters:", accuracy_best)
+    print(f"- Learning Rate UCB: {best_learning_rate}")
+    print(f"- Learning Rate random: {learning_rate_random}")
+    print(f"- Number of Estimators UCB: {best_n_estimators}")
+    print(f"- Number of Estimators random: {n_estimators_random}")
+    print(f"- Accuracy with UCB hyperparameters: {accuracy_best:.4f}")
+    print(f"- Accuracy with random hyperparameters: {accuracy_random:.4f}")
+

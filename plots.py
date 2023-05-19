@@ -39,7 +39,7 @@ def ridgeplot(data):
         axes[idx].text(-0.2,0,f'Class {cls}',fontweight="light", fontfamily='serif', fontsize=11,ha="right")
         if idx != 1 : axes[idx].get_legend().remove()
             
-    fig.text(0.13,0.81,"Age distribution by Pclass in Titanic", fontweight="bold", fontfamily='serif', fontsize=16)
+    fig.text(0.13,0.81,"Age distribution by Pclass", fontweight="bold", fontfamily='serif', fontsize=16)
 
     plt.show()     
 
@@ -103,7 +103,7 @@ def corrmap(data):
     ax.set_xticklabels(ax.get_xticklabels(), fontfamily='serif', rotation=90, fontsize=11)
 
 
-    fig.text(0.97, 1, 'Correlation Heatmap for Titanic dataset', fontweight='bold', fontfamily='serif', fontsize=15, ha='right')    
+    fig.text(0.97, 1, 'Correlation Heatmap', fontweight='bold', fontfamily='serif', fontsize=15, ha='right')    
 
     plt.tight_layout()
     plt.show()
