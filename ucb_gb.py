@@ -59,9 +59,6 @@ def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperpar
             hyperparameter_counts, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space
         )
     
-        selected_learning_rate_random = random.choice(learning_rate_space)
-        selected_n_estimators_random = random.choice(n_estimators_space)
-        selected_max_depth_random = random.choice(max_depth_space)
         
         # Model with UCB
         model_ucb = GradientBoostingClassifier(learning_rate=selected_learning_rate_ucb, 
@@ -75,20 +72,20 @@ def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperpar
         hyperparameter_counts[hyperparameter_index_ucb] += 1
         hyperparameter_rewards[hyperparameter_index_ucb] += accuracy_ucb
 
-        # Model with random parameters
-        model_random = GradientBoostingClassifier(learning_rate=selected_learning_rate_random, n_estimators=selected_n_estimators_random, 
-                                                  max_depth=selected_max_depth_random)
-        model_random.fit(X, y)
-        y_pred_random = model_random.predict(X)
-        accuracy_random = accuracy_score(y, y_pred_random)
-        validation_error_random = 1 - accuracy_random
+    selected_learning_rate_random = random.choice(learning_rate_space)
+    selected_n_estimators_random = random.choice(n_estimators_space)
+    selected_max_depth_random = random.choice(max_depth_space)
+    
+    # Model with random parameters
+    model_random = GradientBoostingClassifier(learning_rate=selected_learning_rate_random, n_estimators=selected_n_estimators_random, 
+                                                max_depth=selected_max_depth_random)
+    model_random.fit(X, y)
+    y_pred_random = model_random.predict(X)
+    accuracy_random = accuracy_score(y, y_pred_random)
+    validation_error_random = 1 - accuracy_random
 
-        hyperparameter_index_random = learning_rate_space.index(selected_learning_rate_random) * len(n_estimators_space) * len(max_depth_space) + n_estimators_space.index(selected_n_estimators_random) * len(max_depth_space) + max_depth_space.index(selected_max_depth_random)
-        hyperparameter_counts[hyperparameter_index_random] += 1
-        hyperparameter_rewards[hyperparameter_index_random] += accuracy_random
-
-    print(f"Best validation error (UCB): {validation_error_ucb} with learning rate {selected_learning_rate_ucb} and number of estimators {selected_n_estimators_ucb}")
-    print(f"Best validation error (Random strategy): {validation_error_random} with learning rate {selected_learning_rate_random} and number of estimators {selected_n_estimators_random}")
+    print(f"Best validation error (UCB): {validation_error_ucb:.6f} with learning rate {selected_learning_rate_ucb}, number of estimators {selected_n_estimators_ucb} and max depth {selected_max_depth_ucb}")
+    print(f"Best validation error (Random strategy): {validation_error_random:.6f} with learning rate {selected_learning_rate_random}, number of estimators {selected_n_estimators_random} and max depth {selected_max_depth_random}")
 
 def UCB_random_models(X, y, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space):
     """
@@ -136,5 +133,5 @@ def UCB_random_models(X, y, hyperparameter_rewards, learning_rate_space, n_estim
     print(f"- Number of Estimators random: {n_estimators_random}")
     print(f"- Max Depth UCB: {best_max_depth}")
     print(f"- Max Depth random: {max_depth_random}")
-    print(f"- Accuracy with UCB hyperparameters: {accuracy_best:.4f}")
-    print(f"- Accuracy with random hyperparameters: {accuracy_random:.4f}")
+    print(f"- Accuracy with UCB hyperparameters: {accuracy_best:.6f}")
+    print(f"- Accuracy with random hyperparameters: {accuracy_random:.6f}")
