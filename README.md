@@ -19,7 +19,7 @@ In this project, we implement two strategies for hyperparameter selection: UCB a
 
 To use this project, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/your_username/your_project.git`
+1. Clone the repository: `git clone https://github.com/arturavagyan2/hyperparameter-tuning-with-UCB.git`
 2. Install the required dependencies: `pip install -r requirements.txt`
 
 ## Usage
