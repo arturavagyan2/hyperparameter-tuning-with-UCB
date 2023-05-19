@@ -7,6 +7,19 @@ def read_data():
     return pd.read_excel('titanic3.xls')
 
 def ridgeplot(data):
+    """
+    Generate a ridge plot to visualize the age distribution by passenger class.
+
+    Parameters:
+        data (DataFrame): A pandas DataFrame containing the dataset with the following columns: 'age', 'pclass', and 'survived'.
+
+    Returns:
+        None (displays the ridge plot as a matplotlib figure).
+
+    Example:
+        ridgeplot(data)
+
+    """
     fig = plt.figure(figsize=(12, 8))
     gs = fig.add_gridspec(3,1)
     gs.update(hspace= -0.55)
@@ -44,6 +57,19 @@ def ridgeplot(data):
     plt.show()     
 
 def scatterplot(data):
+    """
+    Generate a scatter plot to visualize the distribution of survivors by gender.
+
+    Parameters:
+        data (DataFrame): A pandas DataFrame containing the dataset with the following columns: 'sex' and 'survived'.
+
+    Returns:
+        None (displays the scatter plot as a matplotlib figure).
+
+    Example:
+        scatterplot(data)
+
+    """
     survival_rate = data.groupby(['sex']).mean()[['survived']]
     male_rate = survival_rate.loc['male']
     female_rate = survival_rate.loc['female']
@@ -81,6 +107,19 @@ def scatterplot(data):
     plt.show()
 
 def corrmap(data):
+    """
+    Generate a correlation heatmap to visualize the correlation between variables in the dataset.
+
+    Parameters:
+        data (DataFrame): A pandas DataFrame containing the dataset.
+
+    Returns:
+        None (displays the correlation heatmap as a matplotlib figure).
+
+    Example:
+        corrmap(data)
+
+    """
     corr = data.corr()
 
     fig, ax = plt.subplots(1, 1, figsize=(7, 7))
@@ -109,6 +148,19 @@ def corrmap(data):
     plt.show()
 
 def barplot(data):
+    """
+    Generate a bar plot to visualize the survival rate based on age bands in the dataset.
+
+    Parameters:
+        data (DataFrame): A pandas DataFrame containing the dataset with the 'age' and 'survived' columns.
+
+    Returns:
+        None (displays the bar plot as a matplotlib figure).
+
+    Example:
+        barplot(data)
+
+    """
     def age_band(num):
         for i in range(1, 100):
             if num < 10*i : return f'{(i-1) * 10} ~ {i*10}'
