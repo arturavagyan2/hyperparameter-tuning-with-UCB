@@ -1,4 +1,4 @@
-# Project Name
+# Hyperparameter tuning with UCB
 
 This project aims to perform hyperparameter selection for a gradient boosting classifier using the Upper Confidence Bound (UCB) algorithm and a random strategy. It explores different combinations of learning rate and number of estimators to find the optimal hyperparameters that yield the highest accuracy.
 
