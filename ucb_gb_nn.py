@@ -4,6 +4,7 @@ import pandas as pd
 
 from sklearn.metrics import accuracy_score
 from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import GradientBoostingClassifier
 
 def ucb_select_hyperparameters(hyperparameter_counts, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space, hidden_layer_sizes_space=None):
@@ -47,14 +48,16 @@ def ucb_select_hyperparameters(hyperparameter_counts, hyperparameter_rewards, le
     return selected_learning_rate, selected_n_estimators, selected_max_depth
 
 
-def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperparameter_counts, 
+def GB_classifier_valerr(X_train, y_train, X_test, y_test, learning_rate_space, n_estimators_space, hyperparameter_counts, 
                          hyperparameter_rewards, num_hyperparameters, max_depth_space):
     """
     Perform gradient boosting classification with hyperparameter selection using UCB and random strategy.
 
     Parameters:
-        X (array-like): Input features.
-        y (array-like): Target labels.
+        X_train (array-like): Training input features.
+        y_train (array-like): Training target labels.
+        X_test (array-like): Test input features.
+        y_test (array-like): Test target labels.
         learning_rate_space (list): List of learning rate values.
         n_estimators_space (list): List of n_estimators values.
         hyperparameter_counts (ndarray): Array of counts for each combination of hyperparameters.
@@ -66,7 +69,7 @@ def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperpar
         None
 
     Example:
-        GB_classifier_valerr(X_train, y_train, learning_rate_space, n_estimators_space,
+        GB_classifier_valerr(X_train, y_train, X_test, y_test, learning_rate_space, n_estimators_space,
                              hyperparameter_counts, hyperparameter_rewards, num_hyperparameters, max_depth_space)
     """
     for _ in range(num_hyperparameters):
@@ -77,14 +80,14 @@ def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperpar
         # Model with UCB-selected hyperparameters
         model_ucb = GradientBoostingClassifier(learning_rate=selected_learning_rate_ucb, 
                                                n_estimators=selected_n_estimators_ucb, max_depth=selected_max_depth_ucb)
-        model_ucb.fit(X, y)
-        y_pred_ucb = model_ucb.predict(X)
-        accuracy_ucb = accuracy_score(y, y_pred_ucb)
+        model_ucb.fit(X_train, y_train)
+        y_pred_ucb = model_ucb.predict(X_test)
+        accuracy_ucb = accuracy_score(y_test, y_pred_ucb)
         validation_error_ucb = 1 - accuracy_ucb
 
         hyperparameter_index_ucb = learning_rate_space.index(selected_learning_rate_ucb) * len(n_estimators_space) * len(max_depth_space) + n_estimators_space.index(selected_n_estimators_ucb) * len(max_depth_space) + max_depth_space.index(selected_max_depth_ucb)
         hyperparameter_counts[hyperparameter_index_ucb] += 1
-        hyperparameter_rewards[hyperparameter_index_ucb] += accuracy_ucb
+        hyperparameter_rewards[hyperparameter_index_ucb] += accuracy_ucb.mean()
 
     selected_learning_rate_random = random.choice(learning_rate_space)
     selected_n_estimators_random = random.choice(n_estimators_space)
@@ -93,21 +96,23 @@ def GB_classifier_valerr(X, y, learning_rate_space, n_estimators_space, hyperpar
     # Model with randomly selected hyperparameters
     model_random = GradientBoostingClassifier(learning_rate=selected_learning_rate_random, n_estimators=selected_n_estimators_random, 
                                                 max_depth=selected_max_depth_random)
-    model_random.fit(X, y)
-    y_pred_random = model_random.predict(X)
-    accuracy_random = accuracy_score(y, y_pred_random)
+    model_random.fit(X_train, y_train)
+    y_pred_random = model_random.predict(X_test)
+    accuracy_random = accuracy_score(y_test, y_pred_random)
     validation_error_random = 1 - accuracy_random
 
     print(f"Best validation error (UCB): {validation_error_ucb:.6f} with learning rate {selected_learning_rate_ucb}, number of estimators {selected_n_estimators_ucb} and max depth {selected_max_depth_ucb}")
     print(f"Best validation error (Random strategy): {validation_error_random:.6f} with learning rate {selected_learning_rate_random}, number of estimators {selected_n_estimators_random} and max depth {selected_max_depth_random}")
 
-def GB_best_params(X, y, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space):
+def GB_best_params(X_train, y_train, X_test, y_test, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space):
     """
     Compare models with the best hyperparameters selected using UCB and random strategy.
 
     Parameters:
-        X (array-like): Input features.
-        y (array-like): Target labels.
+        X_train (array-like): Training input features.
+        y_train (array-like): Training target labels.
+        X_test (array-like): Test input features.
+        y_test (array-like): Test target labels.
         hyperparameter_rewards (ndarray): Array of rewards (e.g., accuracy) for each combination of hyperparameters.
         learning_rate_space (list): List of learning rate values.
         n_estimators_space (list): List of n_estimators values.
@@ -117,7 +122,7 @@ def GB_best_params(X, y, hyperparameter_rewards, learning_rate_space, n_estimato
         None
 
     Example:
-        UCB_random_models(X_test, y_test, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space)
+        UCB_random_models(X_train, y_train, X_test, y_test, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space)
     """
     best_hyperparameter_index = np.argmax(hyperparameter_rewards)
     best_learning_rate = learning_rate_space[best_hyperparameter_index // (len(n_estimators_space) * len(max_depth_space))]
@@ -130,15 +135,15 @@ def GB_best_params(X, y, hyperparameter_rewards, learning_rate_space, n_estimato
 
     # Model with UCB-selected hyperparameters
     best_model = GradientBoostingClassifier(learning_rate=best_learning_rate, n_estimators=best_n_estimators, max_depth=best_max_depth)
-    best_model.fit(X, y)
-    y_pred_best = best_model.predict(X)
-    accuracy_best = accuracy_score(y, y_pred_best)
+    best_model.fit(X_train, y_train)
+    y_pred_best = best_model.predict(X_test)
+    accuracy_best = accuracy_score(y_test, y_pred_best)
 
     # Model with randomly selected hyperparameters
     model_random = GradientBoostingClassifier(learning_rate=learning_rate_random, n_estimators=n_estimators_random, max_depth=max_depth_random)
-    model_random.fit(X, y)
-    y_pred_random = model_random.predict(X)
-    accuracy_random = accuracy_score(y, y_pred_random)
+    model_random.fit(X_train, y_train)
+    y_pred_random = model_random.predict(X_test)
+    accuracy_random = accuracy_score(y_test, y_pred_random)
 
     print("Best hyperparameters:")
     print(f"- Learning Rate UCB: {best_learning_rate}")
@@ -150,8 +155,31 @@ def GB_best_params(X, y, hyperparameter_rewards, learning_rate_space, n_estimato
     print(f"- Accuracy with UCB hyperparameters: {accuracy_best:.6f}")
     print(f"- Accuracy with random hyperparameters: {accuracy_random:.6f}")
 
-def neural_network_valerr(X, y, num_hyperparameters, hyperparameter_counts, hyperparameter_rewards, 
+def neural_network_valerr(X_train, y_train, X_test, y_test, num_hyperparameters, hyperparameter_counts, hyperparameter_rewards, 
                        learning_rate_space, n_estimators_space, max_depth_space, hidden_layer_sizes_space):
+    """
+    Perform neural network classification with hyperparameter selection using UCB and random strategy.
+
+    Parameters:
+        X_train (array-like): Training input features.
+        y_train (array-like): Training target labels.
+        X_test (array-like): Test input features.
+        y_test (array-like): Test target labels.
+        num_hyperparameters (int): Number of hyperparameters to evaluate.
+        hyperparameter_counts (ndarray): Array of counts for each combination of hyperparameters.
+        hyperparameter_rewards (ndarray): Array of rewards (e.g., accuracy) for each combination of hyperparameters.
+        learning_rate_space (list): List of learning rate values.
+        n_estimators_space (list): List of n_estimators values.
+        max_depth_space (list): List of max_depth values.
+        hidden_layer_sizes_space (list): List of hidden_layer_sizes values.
+
+    Returns:
+        None
+
+    Example:
+        neural_network_valerr(X_train, y_train, X_test, y_test, num_hyperparameters, hyperparameter_counts, hyperparameter_rewards,
+                              learning_rate_space, n_estimators_space, max_depth_space, hidden_layer_sizes_space)
+    """
     for _ in range(num_hyperparameters):
         selected_learning_rate_ucb, selected_n_estimators_ucb, selected_max_depth_ucb, selected_hidden_layer_sizes_ucb = ucb_select_hyperparameters(
             hyperparameter_counts, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space, hidden_layer_sizes_space
@@ -159,9 +187,9 @@ def neural_network_valerr(X, y, num_hyperparameters, hyperparameter_counts, hype
 
         # Model with UCB-selected hyperparameters
         model_ucb_nn = MLPClassifier(learning_rate_init=selected_learning_rate_ucb, hidden_layer_sizes=selected_hidden_layer_sizes_ucb)
-        model_ucb_nn.fit(X, y)
-        y_pred_ucb_nn = model_ucb_nn.predict(X)
-        accuracy_ucb = accuracy_score(y, y_pred_ucb_nn)
+        model_ucb_nn.fit(X_train, y_train)
+        y_pred_ucb_nn = model_ucb_nn.predict(X_test)
+        accuracy_ucb = accuracy_score(y_test, y_pred_ucb_nn)
         validation_error_ucb_nn = 1 - accuracy_ucb
 
         hyperparameter_index_ucb = learning_rate_space.index(selected_learning_rate_ucb) * len(n_estimators_space) * len(max_depth_space) + \
@@ -177,9 +205,9 @@ def neural_network_valerr(X, y, num_hyperparameters, hyperparameter_counts, hype
 
     # Model with randomly selected hyperparameters
     model_random = MLPClassifier(learning_rate_init=selected_learning_rate_random, hidden_layer_sizes=selected_hidden_layer_sizes_random)
-    model_random.fit(X, y)
-    y_pred_random = model_random.predict(X)
-    accuracy_random_nn = accuracy_score(y, y_pred_random)
+    model_random.fit(X_train, y_train)
+    y_pred_random = model_random.predict(X_test)
+    accuracy_random_nn = accuracy_score(y_test, y_pred_random)
     validation_error_random_nn = 1 - accuracy_random_nn
 
     hyperparameter_index_random = learning_rate_space.index(selected_learning_rate_random) * len(n_estimators_space) * len(max_depth_space) + \
@@ -192,9 +220,29 @@ def neural_network_valerr(X, y, num_hyperparameters, hyperparameter_counts, hype
     print(f"Best validation error (UCB): {validation_error_ucb_nn:.6f} with learning rate {selected_learning_rate_ucb}, number of estimators {selected_n_estimators_ucb} and max depth {selected_max_depth_ucb}")
     print(f"Best validation error (Random): {validation_error_random_nn:.6f} with learning rate {selected_learning_rate_random}, number of estimators {selected_n_estimators_random} and max depth {selected_max_depth_random}")
 
+def NN_best_params(X_train, y_train, X_test, y_test, hyperparameter_rewards, 
+                   learning_rate_space, n_estimators_space, max_depth_space, hidden_layer_sizes_space):
+    """
+    Perform neural network classification with best hyperparameters selected using UCB and random strategy.
 
+    Parameters:
+        X_train (array-like): Training input features.
+        y_train (array-like): Training target labels.
+        X_test (array-like): Test input features.
+        y_test (array-like): Test target labels.
+        hyperparameter_rewards (ndarray): Array of rewards (e.g., accuracy) for each combination of hyperparameters.
+        learning_rate_space (list): List of learning rate values.
+        n_estimators_space (list): List of n_estimators values.
+        max_depth_space (list): List of max_depth values.
+        hidden_layer_sizes_space (list): List of hidden_layer_sizes values.
 
-def NN_best_params(X, y, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space, hidden_layer_sizes_space):
+    Returns:
+        None
+
+    Example:
+        NN_best_params(X_train, y_train, X_test, y_test, hyperparameter_rewards, learning_rate_space, n_estimators_space,
+                       max_depth_space, hidden_layer_sizes_space)
+    """
     best_hyperparameter_index = np.argmax(hyperparameter_rewards)
     best_learning_rate = learning_rate_space[best_hyperparameter_index // (len(n_estimators_space) * len(max_depth_space))]
     best_hidden_layer_sizes = hidden_layer_sizes_space[best_hyperparameter_index % len(hidden_layer_sizes_space)]
@@ -204,15 +252,15 @@ def NN_best_params(X, y, hyperparameter_rewards, learning_rate_space, n_estimato
 
     # Model with best UCB-selected hyperparameters
     best_model = MLPClassifier(learning_rate_init=best_learning_rate, hidden_layer_sizes=best_hidden_layer_sizes)
-    best_model.fit(X, y)
-    y_pred_best = best_model.predict(X)
-    accuracy_best = accuracy_score(y, y_pred_best)
+    best_model.fit(X_train, y_train)
+    y_pred_best = best_model.predict(X_test)
+    accuracy_best = accuracy_score(y_test, y_pred_best)
 
     # Model with randomly selected hyperparameters
     model_random = MLPClassifier(learning_rate_init=learning_rate_random, hidden_layer_sizes=hidden_layer_sizes_random)
-    model_random.fit(X, y)
-    y_pred_random = model_random.predict(X)
-    accuracy_random = accuracy_score(y, y_pred_random)
+    model_random.fit(X_train, y_train)
+    y_pred_random = model_random.predict(X_test)
+    accuracy_random = accuracy_score(y_test, y_pred_random)
 
     print("Best hyperparameters:")
     print(f"- Learning Rate (UCB): {best_learning_rate}")
