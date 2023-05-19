@@ -9,7 +9,6 @@ This project aims to perform hyperparameter selection for a gradient boosting cl
 - [Usage](#usage)
 - [Dependencies](#dependencies)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Project Description
 
