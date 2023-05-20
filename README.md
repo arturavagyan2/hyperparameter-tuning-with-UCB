@@ -34,8 +34,3 @@ To use this project, follow these steps:
 ## Dependencies
 
 You can install the dependencies using the `requirements.txt` file provided in the repository.
-
-## Contributing
-
-Contributions are welcome! If you have any suggestions or improvements, please submit a pull request.
-
