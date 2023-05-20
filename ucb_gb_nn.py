@@ -1,10 +1,8 @@
 import random
 import numpy as np
-import pandas as pd
 
 from sklearn.metrics import accuracy_score
 from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import cross_val_score
 from sklearn.ensemble import GradientBoostingClassifier
 
 def ucb_select_hyperparameters(hyperparameter_counts, hyperparameter_rewards, learning_rate_space, n_estimators_space, max_depth_space, hidden_layer_sizes_space=None):
